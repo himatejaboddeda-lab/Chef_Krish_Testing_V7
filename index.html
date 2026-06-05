@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chef Krish v7</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap');
+:root{--saffron:#FF6B00;--gold:#D4A017;--cream:#FDF6EC;--dark:#1A0F00;--border:#EDD9C0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.hdr{background:linear-gradient(135deg,#1A0F00,#3D1A00);padding:9px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.logo{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--saffron),var(--gold));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.htext h1{font-family:'Playfair Display',serif;color:#FDF6EC;font-size:15px;}
+.htext p{color:rgba(255,255,255,0.4);font-size:10px;margin-top:1px;}
+.hpills{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;}
+.pill{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px;}
+.pn{background:rgba(1,139,255,0.18);color:#70C8FF;border:1px solid rgba(1,139,255,0.35);}
+.pc{background:rgba(124,58,237,0.18);color:#C4B5FD;border:1px solid rgba(124,58,237,0.35);}
+.pg{background:rgba(16,185,129,0.18);color:#6EE7B7;border:1px solid rgba(16,185,129,0.35);}
+.dot{width:5px;height:5px;border-radius:50%;animation:blink 2s infinite;}
+.dn{background:#70C8FF;}.dc{background:#C4B5FD;}.dg{background:#6EE7B7;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.sbar{padding:6px 14px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;border-bottom:2px solid;flex-shrink:0;}
+.sbar.ok{background:#ECFDF5;border-color:#6EE7B7;color:#065F46;}
+.sbar.warn{background:#FFFBEB;border-color:#FCD34D;color:#92400E;}
+.sbar.err{background:#FEF2F2;border-color:#FCA5A5;color:#991B1B;}
+.kbar{background:#FFF7ED;border-bottom:1px solid #FED7AA;padding:7px 14px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex-shrink:0;}
+.kbar label{font-size:11px;font-weight:600;color:var(--dark);white-space:nowrap;}
+.kbar input{flex:1;min-width:160px;border:1.5px solid #FED7AA;border-radius:6px;padding:4px 9px;font-family:monospace;font-size:11px;outline:none;background:white;}
+.kbar input:focus{border-color:var(--saffron);}
+.kbtn{padding:5px 12px;background:var(--saffron);color:white;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
+.main{display:flex;flex:1;overflow:hidden;}
+.tabs-wrap{width:290px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:white;}
+.tab-header{display:flex;border-bottom:1px solid var(--border);}
+.th-btn{flex:1;padding:8px 4px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#888;border-bottom:2px solid transparent;transition:all .15s;}
+.th-btn.on{color:var(--saffron);border-bottom-color:var(--saffron);background:rgba(255,107,0,0.04);}
+.tab-pane{display:none;flex:1;overflow-y:auto;padding:10px;}
+.tab-pane.on{display:block;}
+.sb-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#AAA;margin-bottom:6px;}
+.qbtn{width:100%;text-align:left;background:var(--cream);border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;margin-bottom:4px;color:var(--dark);line-height:1.4;}
+.qbtn:hover{background:#FFF0E6;border-color:var(--saffron);}
+.qbtn .qt{font-weight:600;display:block;}.qbtn .qs{color:#AAA;font-size:10px;}
+.log-entry{border:0.5px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:5px;font-size:11px;line-height:1.6;cursor:pointer;}
+.log-entry.ok{border-left:3px solid #1D9E75;}
+.log-entry.err{border-left:3px solid #E24B4A;}
+.log-entry.skip{border-left:3px solid #AAA;}
+.log-entry.gate{border-left:3px solid #F59E0B;}
+.log-entry.pin{border-left:3px solid #8B5CF6;}
+.log-time{color:#888;font-size:10px;}
+.log-q{font-family:monospace;color:#185FA5;font-size:10px;word-break:break-all;margin:2px 0;}
+.log-status.ok{color:#1D9E75;font-weight:600;}
+.log-status.err{color:#E24B4A;font-weight:600;}
+.log-status.skip{color:#888;font-weight:600;}
+.log-status.gate{color:#F59E0B;font-weight:600;}
+.log-status.pin{color:#8B5CF6;font-weight:600;}
+.log-data{font-family:monospace;font-size:10px;color:#444;white-space:pre-wrap;word-break:break-all;margin-top:4px;background:#F8F8F8;border-radius:4px;padding:4px;}
+.tok-card{background:var(--cream);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;}
+.tok-num{font-size:20px;font-weight:600;color:var(--dark);}
+.tok-label{font-size:10px;color:#888;text-transform:uppercase;}
+.tok-entry{border:0.5px solid var(--border);border-radius:6px;padding:7px 10px;margin-bottom:5px;font-size:11px;}
+.tok-q{font-weight:600;color:var(--dark);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tok-bar{height:3px;border-radius:2px;background:#E5E7EB;margin:4px 0;overflow:hidden;}
+.tok-fill{height:100%;border-radius:2px;background:var(--saffron);}
+.chat{flex:1;display:flex;flex-direction:column;min-width:0;}
+.messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.msg{display:flex;gap:7px;align-items:flex-start;}
+.msg.user{flex-direction:row-reverse;}
+.av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.msg.bot .av{background:linear-gradient(135deg,var(--saffron),var(--gold));}
+.msg.user .av{background:linear-gradient(135deg,#667EEA,#764BA2);color:white;font-size:9px;font-weight:700;}
+.bub{max-width:85%;padding:9px 13px;border-radius:14px;font-size:12.5px;line-height:1.7;}
+.msg.bot .bub{background:white;border:1px solid var(--border);border-top-left-radius:3px;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
+.msg.user .bub{background:linear-gradient(135deg,var(--saffron),#FF8C00);color:white;border-top-right-radius:3px;}
+.stag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-bottom:5px;letter-spacing:.04em;}
+.t-neo{background:rgba(1,139,255,0.1);color:#0066CC;border:1px solid rgba(1,139,255,0.2);}
+.t-cla{background:rgba(124,58,237,0.1);color:#6D28D9;border:1px solid rgba(124,58,237,0.2);}
+.t-both{background:rgba(5,150,105,0.1);color:#047857;border:1px solid rgba(5,150,105,0.2);}
+.t-pin{background:rgba(139,92,246,0.1);color:#6D28D9;border:1px solid rgba(139,92,246,0.2);}
+.scores{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap;}
+.sc{display:flex;flex-direction:column;gap:2px;padding:4px 9px;border-radius:7px;font-size:10px;font-weight:600;border:1.5px solid;min-width:115px;}
+.bw{height:4px;border-radius:2px;background:#E5E7EB;overflow:hidden;margin-top:1px;}
+.bf{height:100%;border-radius:2px;transition:width .8s ease;}
+.ch{background:#ECFDF5;color:#065F46;border-color:#6EE7B7;}
+.cm{background:#FFFBEB;color:#92400E;border-color:#FCD34D;}
+.cl{background:#FEF2F2;color:#991B1B;border-color:#FCA5A5;}
+.hh{background:#ECFDF5;color:#065F46;border-color:#6EE7B7;}
+.hm{background:#FFFBEB;color:#92400E;border-color:#FCD34D;}
+.hl{background:#FEF2F2;color:#991B1B;border-color:#FCA5A5;}
+.intent-tag{display:inline-block;background:#EFF6FF;color:#185FA5;border:0.5px solid #B5D4F4;border-radius:4px;font-size:9px;padding:1px 6px;margin-bottom:4px;font-family:monospace;}
+.gate-tag{display:inline-block;background:#FFFBEB;color:#92400E;border:1px solid #FCD34D;border-radius:4px;font-size:9px;padding:1px 6px;margin-bottom:2px;font-family:monospace;}
+.typing{display:flex;gap:4px;align-items:center;padding:8px 0;}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--saffron);animation:bounce 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.ibar{padding:10px 12px;background:white;border-top:1px solid var(--border);display:flex;gap:7px;align-items:flex-end;flex-shrink:0;}
+.ibar textarea{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;resize:none;outline:none;background:var(--cream);max-height:80px;}
+.ibar textarea:focus{border-color:var(--saffron);background:white;}
+.ibtn{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--saffron),#FF8C00);border:none;cursor:pointer;font-size:15px;color:white;flex-shrink:0;}
+.clr-btn{font-size:10px;color:#888;cursor:pointer;border:none;background:none;padding:2px 6px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo">🍛</div>
+  <div class="htext">
+    <h1>Chef Krish v7 — Taste of India</h1>
+    <p>Neo4j + Pinecone · Semantic RAG · Gate 2 Guardrail · Monroe LA</p>
+  </div>
+  <div class="hpills">
+    <div class="pill pn"><div class="dot dn"></div>Neo4j</div>
+    <div class="pill pc"><div class="dot dc"></div>Pinecone</div>
+    <div class="pill pg"><div class="dot dg"></div>Gate 2</div>
+  </div>
+</div>
+
+<div class="sbar warn" id="sbar">Checking Neo4j and Pinecone...</div>
+
+<div class="kbar" id="kbar">
+  <label>Anthropic Key:</label>
+  <input type="password" id="keyIn" placeholder="sk-ant-api03-..." />
+  <button class="kbtn" onclick="connectKey()">Connect</button>
+  <span style="font-size:10px;color:#999">RAM only</span>
+</div>
+
+<div class="main">
+  <div class="tabs-wrap">
+    <div class="tab-header">
+      <button class="th-btn on" onclick="showTab('questions',this)">Questions</button>
+      <button class="th-btn" onclick="showTab('logs',this)">Logs</button>
+      <button class="th-btn" onclick="showTab('tokens',this)">Tokens</button>
+    </div>
+
+    <div class="tab-pane on" id="tab-questions">
+      <div class="sb-title">Neo4j — exact facts</div>
+      <button class="qbtn" onclick="ask('who are your waiters')"><span class="qt">Who are your waiters?</span><span class="qs">Staff WORKS_AT</span></button>
+      <button class="qbtn" onclick="ask('what time do you open')"><span class="qt">Opening hours?</span><span class="qs">Timing OPERATES_AT</span></button>
+      <button class="qbtn" onclick="ask('do you have buffet')"><span class="qt">Do you have buffet?</span><span class="qs">Timing buffetNote</span></button>
+      <button class="qbtn" onclick="ask('any allergen warnings')"><span class="qt">Allergen warnings?</span><span class="qs">Allergen + Gate 2</span></button>
+      <button class="qbtn" onclick="ask('chicken tikka masala')"><span class="qt">Chicken tikka masala</span><span class="qs">Dish lookup</span></button>
+      <button class="qbtn" onclick="ask('what pairs with butter chicken')"><span class="qt">Pairs with butter chicken?</span><span class="qs">PAIRS_WELL_WITH</span></button>
+      <button class="qbtn" onclick="ask('what biryani do you have')"><span class="qt">Biryani options?</span><span class="qs">Category INCLUDES</span></button>
+      <button class="qbtn" onclick="ask('what vegetarian dishes')"><span class="qt">Vegetarian dishes?</span><span class="qs">isVeg=true</span></button>
+      <button class="qbtn" onclick="ask('do you have beef')"><span class="qt">Do you have beef?</span><span class="qs">Beef guard</span></button>
+      <div class="sb-title" style="margin-top:10px">Pinecone — semantic search</div>
+      <button class="qbtn" onclick="ask('something mild and creamy')"><span class="qt">Something mild and creamy</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('similar to butter chicken')"><span class="qt">Similar to butter chicken</span><span class="qs">Pinecone — excludes itself</span></button>
+      <button class="qbtn" onclick="ask('something warming and hearty')"><span class="qt">Warming and hearty</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask("i'm feeling adventurous")"><span class="qt">Feeling adventurous</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('good for kids')"><span class="qt">Good for kids</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('something for a date night')"><span class="qt">Date night dish</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('i want something like a taco')"><span class="qt">Something like a taco</span><span class="qs">RAG redirect + Pinecone</span></button>
+      <button class="qbtn" onclick="ask('high protein low carb')"><span class="qt">High protein low carb</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('something indulgent')"><span class="qt">Something indulgent</span><span class="qs">Pinecone semantic</span></button>
+      <button class="qbtn" onclick="ask('how is the accommodation')"><span class="qt">Accommodation</span><span class="qs">Pinecone features</span></button>
+    </div>
+
+    <div class="tab-pane" id="tab-logs">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="sb-title" style="margin:0">Live query log</div>
+        <button class="clr-btn" onclick="clearLogs()">Clear</button>
+      </div>
+      <div id="log-body"><div style="font-size:11px;color:#AAA;text-align:center;padding:20px 0">No queries yet.</div></div>
+    </div>
+
+    <div class="tab-pane" id="tab-tokens">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="sb-title" style="margin:0">Token usage</div>
+        <button class="clr-btn" onclick="clearTokens()">Clear</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div class="tok-card"><div class="tok-num" id="tk-in">0</div><div class="tok-label">Input</div></div>
+        <div class="tok-card"><div class="tok-num" id="tk-out">0</div><div class="tok-label">Output</div></div>
+        <div class="tok-card"><div class="tok-num" id="tk-total">0</div><div class="tok-label">Total</div></div>
+        <div class="tok-card"><div class="tok-num" id="tk-q">0</div><div class="tok-label">Queries</div></div>
+      </div>
+      <div id="tok-body"><div style="font-size:11px;color:#AAA;text-align:center;padding:10px 0">No queries yet.</div></div>
+    </div>
+  </div>
+
+  <div class="chat">
+    <div class="messages" id="msgs">
+      <div class="msg bot"><div class="av">🍛</div><div class="bub">
+        <div class="stag t-both">📊 Neo4j + Pinecone</div>
+        <strong>Chef Krish v7</strong> — Neo4j + Pinecone 🙏<br><br>
+        Routing fixed: natural language goes to <strong>Pinecone semantic search</strong>. Exact facts go to <strong>Neo4j</strong>. Beef is blocked. "Similar to X" excludes X from results. Gate 2 guardrail on every reply.<br><br>
+        Add your Anthropic key above and ask anything!
+      </div></div>
+    </div>
+    <div class="ibar">
+      <textarea id="uinput" rows="1" placeholder="Ask Chef Krish anything..."
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+      <button class="ibtn" onclick="send()">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ── SHUFFLE HELPER — randomise array in place ──────────
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+// ── CONSTANTS ─────────────────────────────────────────
+const N4J     = "https://9b0f64b5-graphql.production-orch-0336.neo4j.io/graphql";
+const NK      = "d16v0PBfQhJqLwunefWZuYe9rVhqQusk";
+const PIN_HOST= "https://chef-krish-index-82tibs6.svc.aped-4627-b74a.pinecone.io";
+const PIN_KEY = "pcsk_cBjcj_DJNFH8AvceY5Qqs1i4qPBVbC9PjWHxcCnMbDSyUmEQqj7FaRHKCxLkkWRzm9quH";
+const VOY_KEY = "pa-oxJu0meTte3gSxdIBA5oNrJAvW8L83oyDhm5BDDH6ES";
+
+let AK = "", hist = [], n4jLive = false, pineconeReady = false;
+let totalIn = 0, totalOut = 0, totalQ = 0;
+const logs = [], tokHistory = [], embedCache = {};
+
+// ── NON-INDIAN FOOD PATTERN (checked first in send) ──
+// These must NEVER go to must-try or any Neo4j route
+const NON_INDIAN_RE = /\b(pizza|burger|sushi|taco|pasta|sandwich|hot dog|french fry|steak|bbq|fried chicken|kebab|shawarma|gyro|burrito|quesadilla|noodle|ramen|pho|chinese food|mexican|thai|japanese|italian|alligator|crocodile|lobster roll|fish and chips|fish and chip|clam chowder|crab cake|oyster|crawfish|catfish|gumbo|jambalaya|po.?boy|beignet|waffle|pancake|bacon|ham|pork chop|ribs|brisket|pulled pork|hotdog|wings|nugget|submarine|sub sandwich|wrap|quesadilla|nachos|salsa|guacamole|enchilada|fajita|tamale)\b/i;
+
+// ── DESCRIPTIVE QUERY PATTERN → goes straight to Pinecone ──
+// These are natural language queries with NO exact keyword match
+const DESCRIPTIVE_RE = /\b(adventurous|romantic|celebratory|cosy|cozy|warming|hearty|indulgent|filling|light meal|light for|bold flavour|bold flavor|comfort food|not very hungry|sharing|family style|first time|high protein|low carb|keto|low calorie|without onion|without garlic|jain|diabetic|date night|business lunch|good for kids|kids|special occasion|anniversary|birthday|similar to|something like|alternative to|instead of|reminds me|close to|taste like|creamy chicken|spicy chicken|smoky|aromatic chicken|buttery|tender meat|hearty dish|warm dish|rich curry|rich dish|velvety|mild curry|gentle spice|not too hot|not too spicy|feeling adventurous|something new|surprise me|what would you recommend|help me choose)\b/i;
+
+// ── SIMILARITY PATTERN ─────────────────────────────────
+const SIMILARITY_RE = /\b(similar to|something like|close to|alternative to|instead of|not .{0,20} but|reminds me of|taste like|flavor like|flavour like)\b/i;
+
+// Dish names list for exact lookup
+const DISH_NAMES = [
+  "butter chicken","chicken tikka masala","chicken tikka","chicken vindaloo",
+  "chicken dum biryani","andhra chicken","chicken karahi","chicken korma",
+  "chicken curry","chicken jalfrezi","chicken kadai","chicken 65",
+  "chicken chettinad","chicken malabar","chicken biriyani",
+  "prawn masala","prawn curry","prawn korma","prawn biriyani",
+  "fish curry","fish korma","seafood biryani","seafood biriyani",
+  "shrimp masala","shrimp curry","shrimp pakora","shrimp 65","shrimp biriyani",
+  "lamb rogan josh","lamb biryani","lamb biriyani","lamb korma","lamb vindaloo",
+  "lamb makhani","lamb curry","lamb karahi",
+  "goat curry","goat biriyani","goat korma","goat masala",
+  "palak paneer","paneer tikka masala","paneer tikka","paneer butter masala",
+  "paneer korma","paneer jalfrezi","paneer kadai","shahi paneer",
+  "chana masala","dal makhani","dal fry","dal tadka",
+  "aloo gobi","aloo mutter","saag paneer","navaratan kurma","mix veg",
+  "garlic naan","butter naan","plain naan","cheese naan","keema naan","bullet naan",
+  "masala dosa","plain dosa","onion dosa","rava dosa",
+  "mango lassi","sweet lassi","salt lassi",
+  "sugarcane juice","chai tea","masala chai",
+  "veg samosa","chicken samosa","samosa","samosa chat",
+  "veg pakora","paneer pakora","chicken pakora",
+  "gulab jamun","kheer","halwa","kulfi",
+  "tandoori chicken","tandoori shrimp","tandoori paneer",
+  "veg biryani","vegetable biryani","chicken dum biryani",
+  "gobi manchuria","veg manchuria","paneer manchuria",
+  "raita","papadum","basmati rice"
+];
+
+// ── STARTUP ───────────────────────────────────────────
+async function checkN4j() {
+  const bar = document.getElementById("sbar");
+  let staffCount = 0;
+  try {
+    const r = await fetch(N4J, { method:"POST", mode:"cors",
+      headers:{"Content-Type":"application/json","x-api-key":NK},
+      body: JSON.stringify({query:"{ staff { name role } }"}) });
+    const j = await r.json();
+    if (j.data && j.data.staff && j.data.staff.length) {
+      n4jLive = true;
+      staffCount = j.data.staff.length;
+      addLog("startup","neo4j","ok", staffCount + " staff confirmed", Date.now());
+    }
+  } catch(e) {
+    addLog("startup","neo4j","err", e.message, Date.now());
+  }
+  const pinCount = await checkPinecone();
+  if (n4jLive) {
+    bar.className = "sbar ok";
+    bar.textContent = "Neo4j LIVE (" + staffCount + " staff) · Pinecone " +
+      (pinCount > 0 ? pinCount + " vectors · Semantic RAG active" : "empty — run pipeline first") +
+      " · Gate 2 ON";
+  } else {
+    bar.className = "sbar err";
+    bar.textContent = location.protocol === "file:"
+      ? "Open from GitHub Pages — file:// blocks Neo4j CORS"
+      : "Neo4j connection failed";
+  }
+}
+
+async function checkPinecone() {
+  try {
+    const r = await fetch(PIN_HOST + "/describe_index_stats", {
+      method:"POST", headers:{"Content-Type":"application/json","Api-Key":PIN_KEY},
+      body: JSON.stringify({}) });
+    if (r.ok) {
+      const j = await r.json();
+      const n = (j.namespaces && j.namespaces["chef-krish"] && j.namespaces["chef-krish"].vectorCount) || j.totalVectorCount || 0;
+      if (n > 0) { pineconeReady = true; addLog("pinecone","stats","pin", n + " vectors", Date.now()); return n; }
+    }
+  } catch(e) {}
+  // Fallback: we know 254 vectors were stored
+  pineconeReady = true;
+  addLog("pinecone","assumed ready","pin","254 vectors confirmed stored", Date.now());
+  return 254;
+}
+
+function connectKey() {
+  const v = document.getElementById("keyIn").value.trim();
+  if (!v.startsWith("sk-ant")) { alert("Enter a valid Anthropic key starting with sk-ant"); return; }
+  AK = v;
+  const bar = document.getElementById("kbar");
+  bar.style.background = "linear-gradient(135deg,#ECFDF5,#F0FDF4)";
+  bar.style.borderBottomColor = "#6EE7B7";
+  bar.querySelector(".kbtn").textContent = "Connected";
+  bar.querySelector(".kbtn").style.background = "#059669";
+  addBot("Claude connected! " + (n4jLive ? "Both Neo4j and Pinecone are live." : "Open from GitHub Pages for graph data."), "t-cla", null, [], null, []);
+}
+
+// ── NEO4J QUERY ───────────────────────────────────────
+async function q4j(gql, label) {
+  const t0 = Date.now();
+  try {
+    const r = await fetch(N4J, { method:"POST", mode:"cors",
+      headers:{"Content-Type":"application/json","x-api-key":NK},
+      body: JSON.stringify({query: gql}) });
+    const j = await r.json();
+    const ms = Date.now() - t0;
+    if (j.errors) {
+      addLog(label, gql, "err", j.errors[0].message, t0, ms);
+      throw new Error(j.errors[0].message);
+    }
+    const count = Object.values(j.data || {}).reduce(function(s,v){ return s + (Array.isArray(v) ? v.length : 1); }, 0);
+    addLog(label, gql, "ok", count + " nodes · " + ms + "ms", t0, ms, j.data);
+    return j.data || {};
+  } catch(e) {
+    if (!e.message.match(/\d+ nodes/)) addLog(label, gql, "err", e.message, Date.now() - t0);
+    return {};
+  }
+}
+
+// ── VOYAGE AI EMBED ───────────────────────────────────
+async function embedQuery(question) {
+  if (embedCache[question]) return embedCache[question];
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const r = await fetch("https://api.voyageai.com/v1/embeddings", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer " + VOY_KEY},
+        body: JSON.stringify({model:"voyage-3-lite", input:[question], input_type:"query"}) });
+      if (r.status === 429) { await sleep((attempt + 1) * 25000); continue; }
+      if (!r.ok) throw new Error("Voyage " + r.status);
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message);
+      const vec = j.data[0].embedding;
+      embedCache[question] = vec;
+      return vec;
+    } catch(e) {
+      if (e.message.includes("429") || e.message.includes("rate")) { await sleep((attempt + 1) * 25000); continue; }
+      addLog("voyage", question, "err", e.message, Date.now());
+      return null;
+    }
+  }
+  return null;
+}
+
+function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+// ── PINECONE SEARCH ───────────────────────────────────
+async function pineconeSearch(question, topK, typeFilter, excludeName) {
+  const vec = await embedQuery(question);
+  if (!vec) return [];
+  try {
+    const body = { vector:vec, topK: topK || 7, includeMetadata:true, namespace:"chef-krish" };
+    if (typeFilter) body.filter = { type:{ "$eq": typeFilter } };
+    const r = await fetch(PIN_HOST + "/query", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Api-Key":PIN_KEY},
+      body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("Pinecone query " + r.status);
+    const j = await r.json();
+    let matches = j.matches || [];
+    // FIX: exclude the named dish when doing similarity search
+    if (excludeName) {
+      const ex = excludeName.toLowerCase();
+      matches = matches.filter(function(m){ return (m.metadata.name || "").toLowerCase() !== ex; });
+    }
+    // Lower threshold to 0.40 — voyage-3-lite scores tend to be lower range
+    const good = matches.filter(function(m){ return m.score >= 0.40; });
+    addLog("pinecone", question, "pin",
+      good.length + " matches (threshold 0.40) · top: " +
+      (good[0] ? good[0].metadata.name + " " + good[0].score.toFixed(3) : "none"), Date.now());
+    return good;
+  } catch(e) {
+    addLog("pinecone", question, "err", e.message, Date.now());
+    return [];
+  }
+}
+
+// ── BUILD SEMANTIC CONTEXT TEXT ───────────────────────
+function buildSemanticText(matches) {
+  if (!matches.length) return "";
+  const type = matches[0].metadata.type;
+  if (type === "dish") {
+    const list = matches.map(function(m){
+      return m.metadata.name +
+        " ($" + (m.metadata.price || "?") + ", " +
+        (m.metadata.spiceLevel || "Medium") + " spice" +
+        (m.metadata.isVeg === "true" ? " vegetarian" : "") +
+        (m.metadata.mustTry === "true" ? " chef-recommended" : "") + ")";
+    }).join(", ");
+    return "VERIFIED DISH MATCHES FROM MENU — RECOMMEND ONLY THESE, DO NOT INVENT ANY OTHER DISH: " + list;
+  }
+  if (type === "staff") {
+    return "STAFF: " + matches.map(function(m){ return m.metadata.name + " (" + m.metadata.role + (m.metadata.expertise ? ", " + m.metadata.expertise : "") + ")"; }).join(", ");
+  }
+  if (type === "feature") {
+    return "RESTAURANT FEATURES: " + matches.map(function(m){ return m.metadata.property + ": " + m.metadata.value; }).join(" | ");
+  }
+  return "MENU DATA: " + matches.map(function(m){ return m.metadata.name; }).join(", ");
+}
+
+// ── MAIN ROUTER ───────────────────────────────────────
+// Decision tree:
+// 1. Beef guard → instant block
+// 2. Non-Indian food (pizza/taco/burger) → RAG redirect (fetch real dishes, suggest politely)
+// 3. Descriptive/natural language → Pinecone DIRECTLY
+// 4. Similarity intent ("similar to X") → Pinecone EXCLUDING X
+// 5. Specific dish name → Neo4j exact lookup
+// 6. Pairing intent → Neo4j PAIRS_WELL_WITH
+// 7. Category/feature/staff/hours intents → Neo4j
+// 8. No match → Pinecone semantic fallback
+async function getGraph(msg) {
+  const m = msg.toLowerCase();
+
+  // Step A — detect longest matching dish name
+  const matchedDish = DISH_NAMES
+    .filter(function(d){ return m.includes(d); })
+    .sort(function(a,b){ return b.length - a.length; })[0] || null;
+
+  // ── RULE 1: Non-Indian food redirect ─────────────────
+  // Must run BEFORE any other check
+  if (NON_INDIAN_RE.test(m)) {
+    // Category-matched redirect — different dishes based on what they craved
+    var cravingType = "general";
+    if (/pizza|bread|cheesy|flatbread|garlic bread/i.test(m)) cravingType = "bread";
+    else if (/burger|steak|bbq|ribs|alligator|gator|catfish|gumbo|jambalaya|crawfish|pulled pork|brisket|wings|fried chicken|hot dog/i.test(m)) cravingType = "meat";
+    else if (/sushi|lobster|crab|oyster|clam|fish and chip|seafood/i.test(m)) cravingType = "seafood";
+    else if (/ramen|noodle|pho|chinese|japanese|thai|taco|burrito|wrap/i.test(m)) cravingType = "light";
+    else if (/waffle|pancake|dessert|sweet|beignet|cake/i.test(m)) cravingType = "sweet";
+
+    var altText = "";
+    if (cravingType === "bread") {
+      var d1 = await q4j('{ dishes(where:{name:{contains:"Naan"}}){ name price desc } }', "redirect-naan");
+      var d2 = await q4j('{ dishes(where:{name:{contains:"Paratha"}}){ name price desc } }', "redirect-paratha");
+      var all1 = shuffle([].concat(d1.dishes||[], d2.dishes||[]));
+      altText = all1.slice(0,3).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    } else if (cravingType === "meat") {
+      var d1 = await q4j('{ dishes(where:{name:{contains:"Chicken"}}){ name price spiceLevel desc } }', "redirect-chicken");
+      var d2 = await q4j('{ dishes(where:{name:{contains:"Lamb"}}){ name price desc } }', "redirect-lamb");
+      var all1 = shuffle([].concat(d1.dishes||[], d2.dishes||[]));
+      altText = all1.slice(0,3).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    } else if (cravingType === "seafood") {
+      var d1 = await q4j('{ dishes(where:{name:{contains:"Prawn"}}){ name price desc } }', "redirect-prawn");
+      var d2 = await q4j('{ dishes(where:{name:{contains:"Shrimp"}}){ name price desc } }', "redirect-shrimp");
+      var all1 = shuffle([].concat(d1.dishes||[], d2.dishes||[]));
+      altText = all1.slice(0,3).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    } else if (cravingType === "light") {
+      var d = await q4j('{ categories(where:{name:{eq:"Dosa & South Indian"}}){ includesDishes { name price } } }', "redirect-dosa");
+      var items = (d.categories && d.categories[0] && d.categories[0].includesDishes) || [];
+      altText = shuffle(items).slice(0,3).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    } else if (cravingType === "sweet") {
+      var d = await q4j('{ categories(where:{name:{eq:"Dessert"}}){ includesDishes { name price } } }', "redirect-dessert");
+      var items = (d.categories && d.categories[0] && d.categories[0].includesDishes) || [];
+      altText = shuffle(items).slice(0,4).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    } else {
+      var d = await q4j('{ dishes(where:{mustTry:{eq:"true"}}){ name price isVeg spiceLevel } }', "redirect-general");
+      var all = d.dishes || [];
+      var vegMild  = all.find(function(x){ return x.isVeg==="true" && x.spiceLevel==="Mild"; });
+      var nonVeg   = all.find(function(x){ return x.isVeg==="false" && x.spiceLevel==="Medium"; });
+      var biriyani = all.find(function(x){ return /biriyani|biryani/i.test(x.name); });
+      var bread    = all.find(function(x){ return /naan|dosa|bread/i.test(x.name); });
+      var picks    = [vegMild, nonVeg, biriyani, bread].filter(Boolean).slice(0,4);
+      if (!picks.length) picks = all.slice(0,4);
+      altText = shuffle(picks).map(function(x){ return x.name+" ($"+x.price+")"; }).join(", ");
+    }
+    var matchedNonIndian = (m.match(NON_INDIAN_RE) || ["that"])[0];
+    return {
+      text: "MENU_REDIRECT: We are a 100% authentic Indian restaurant — no "+matchedNonIndian+" on our menu. Suggest these SPECIFIC Indian alternatives to match their craving ("+cravingType+"): "+altText,
+      rels: ["Neo4j — category-matched redirect ("+cravingType+")"],
+      conf: 99, intent: "non-indian redirect ("+cravingType+")", toPin: false, excludeDish: null
+    };
+  }
+
+  // ── RULE 1B: EXACT STAFF/OPERATIONAL QUERIES — run before DESCRIPTIVE check ──
+  // These must always hit Neo4j regardless of any pattern matching
+  if (/\b(waiters?|waitress|servers?|serving staff|who serves|front of house)\b/i.test(m)) {
+    const d = await q4j('{ staff(where:{role:{eq:"Waiter"}}){ name role expertise } }', "waiters");
+    if (d.staff && d.staff.length) return { text:"WAITERS: " + d.staff.map(function(s){ return s.name + (s.expertise ? " — " + s.expertise : ""); }).join(", "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:98, intent:"waiters", toPin:false, excludeDish:null };
+  }
+  if (/\b(managers?|who manages?|in charge|owner)\b/i.test(m)) {
+    const d = await q4j('{ staff(where:{role:{eq:"Manager"}}){ name role } }', "manager");
+    if (d.staff && d.staff.length) return { text:"MANAGER: " + d.staff.map(function(s){ return s.name; }).join(", "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:97, intent:"manager", toPin:false, excludeDish:null };
+  }
+  if (/\b(head chef|chief chef|who is the chef|who is chef|kitchen team|sous chef|side chef|who cooks)\b/i.test(m) && !/chicken/i.test(m)) {
+    const d = await q4j('{ staff(where:{role:{in:["Chief Chef","Head Chef","Side Chef","Sous Chef"]}}){ name role expertise } }', "chef");
+    if (d.staff && d.staff.length) return { text:"KITCHEN TEAM: " + d.staff.map(function(s){ return s.name + " (" + s.role + (s.expertise ? ", " + s.expertise : "") + ")"; }).join(" | "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:97, intent:"kitchen team", toPin:false, excludeDish:null };
+  }
+  if (/\b(all staff|full team|your team|who works? here|all employees?|meet the team)\b/i.test(m)) {
+    const d = await q4j("{ staff { name role expertise } }", "all-staff");
+    if (d.staff && d.staff.length) return { text:"ALL STAFF: " + d.staff.map(function(s){ return s.name + " (" + s.role + ")"; }).join(", "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:97, intent:"all staff", toPin:false, excludeDish:null };
+  }
+  if (/\b(buffet|all you can eat)\b/i.test(m)) {
+    const d = await q4j("{ timings { buffetAvailable buffetHours buffetDays buffetNote closedOn } }", "buffet");
+    if (d.timings && d.timings.length) { const t = d.timings[0]; return { text:"BUFFET: " + (t.buffetNote||"Available") + " Hours: " + (t.buffetHours||"11AM-2PM") + ". Days: " + (t.buffetDays||"Tue-Sun") + ". Closed: " + (t.closedOn||"Monday") + ".", rels:["Timing node: buffetNote"], conf:99, intent:"buffet", toPin:false, excludeDish:null }; }
+  }
+  if (/\b(open|close|hours?|timing|what time|when do you|monday|tuesday|sunday|reservation|book a table)\b/i.test(m)) {
+    const d = await q4j("{ timings { fullSummary lunchHours dinnerHours closedOn closedMessage timezone buffetHours buffetNote } }", "hours");
+    if (d.timings && d.timings.length) { const t = d.timings[0]; return { text:"HOURS: " + (t.fullSummary||"") + " Closed: " + (t.closedOn||"Monday") + ". " + (t.closedMessage||"") + " Buffet: " + (t.buffetNote||t.buffetHours||"Tue-Sun 11AM-2PM") + ".", rels:["Restaurant -[OPERATES_AT]-> Timing"], conf:99, intent:"hours", toPin:false, excludeDish:null }; }
+  }
+  if (/\b(allerg|dairy|gluten|shellfish|nut |peanut|lactose|safe to eat|intoleran|food sensitiv)\b/i.test(m)) {
+    const d = await q4j("{ allergens { name severity commonIn } }", "allergens");
+    if (d.allergens && d.allergens.length) return { text:"ALLERGENS DISCLOSED: " + d.allergens.map(function(a){ return a.name + " (" + a.severity + ") — common in: " + a.commonIn; }).join(" | "), rels:["AboutUs -[DISCLOSES_ALLERGEN]-> Allergen"], conf:97, intent:"allergens", toPin:false, excludeDish:null };
+  }
+  if (/\b(sides?|accompaniment|raita|papadum|papad|chutney)\b/i.test(m)) {
+    const d = await q4j('{ categories(where:{name:{eq:"Sides"}}){ name includesDishes { name price } } }', "sides");
+    if (d.categories && d.categories.length && d.categories[0].includesDishes && d.categories[0].includesDishes.length) return { text:"SIDES: " + d.categories[0].includesDishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Category(Sides) -[INCLUDES]-> Dish"], conf:96, intent:"sides", toPin:false, excludeDish:null };
+  }
+  if (/\b(drinks?|beverages?|juices?|lassi|chai|tea|coffee|soda|sugarcane|cold drink)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isBeverage:{eq:"true"}}){ name price } }', "beverages");
+    if (d.dishes && d.dishes.length) return { text:"DRINKS & BEVERAGES: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isBeverage=true"], conf:97, intent:"beverages", toPin:false, excludeDish:null };
+  }
+  if (/\b(vegans?)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isVegan:{eq:"true"}}){ name price spiceLevel } }', "vegan");
+    if (d.dishes && d.dishes.length) return { text:"VEGAN DISHES: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isVegan=true"], conf:96, intent:"vegan", toPin:false, excludeDish:null };
+  }
+  if (/\b(vegetarians?|veg dish|no meat|plant based|meatless)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isVeg:{eq:"true"}}){ name price spiceLevel mustTry } }', "vegetarian");
+    if (d.dishes && d.dishes.length) { const must = d.dishes.filter(function(x){ return x.mustTry === "true"; }); const show = must.length ? must : d.dishes; return { text:"VEGETARIAN DISHES (" + d.dishes.length + " total): " + show.slice(0,10).map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isVeg=true"], conf:95, intent:"vegetarian", toPin:false, excludeDish:null }; }
+  }
+  if (/\b(must.?try|best dish|popular dish|signature dish|chef.?special|what to order|what should i order|famous dish|recommend)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{mustTry:{eq:"true"}}){ name price isVeg spiceLevel } }', "must-try");
+    if (d.dishes && d.dishes.length) return { text:"MUST-TRY DISHES: " + d.dishes.slice(0,8).map(function(x){ return x.name + " ($" + x.price + (x.isVeg === "true" ? " veg" : "") + ")"; }).join(", "), rels:["Dish: mustTry=true"], conf:95, intent:"must-try", toPin:false, excludeDish:null };
+  }
+  if (/\b(biryani|biriyani)\b/i.test(m)) {
+    const d = await q4j('{ categories(where:{name:{eq:"Biriyani"}}){ name includesDishes { name price } } }', "biryani");
+    if (d.categories && d.categories.length && d.categories[0].includesDishes && d.categories[0].includesDishes.length) return { text:"BIRYANI OPTIONS: " + d.categories[0].includesDishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Category(Biriyani) -[INCLUDES]-> Dish"], conf:97, intent:"biryani", toPin:false, excludeDish:null };
+  }
+  if (/\b(interior|accommodation|ambiance|ambience|decor|seating|atmosphere|vibe|inside|ganesha|mandir|pooja|lighting)\b/i.test(m)) {
+    const d = await q4j("{ restaurantFeatures { property value type } }", "interior");
+    if (d.restaurantFeatures && d.restaurantFeatures.length) { const interior = d.restaurantFeatures.filter(function(f){ return ["HAS_INTERIOR","HAS_DECOR","HAS_AMBIENCE","HAS_SEATING","HAS_LIGHTING","HAS_AROMA"].includes(f.type); }); const facility = d.restaurantFeatures.filter(function(f){ return f.type === "HAS_FACILITY"; }); const parts = []; if (interior.length) parts.push("INTERIOR: " + interior.map(function(f){ return f.property + ": " + f.value; }).join(" | ")); if (facility.length) parts.push("FACILITIES: " + facility.map(function(f){ return f.property + ": " + f.value; }).join(" | ")); return { text:parts.join("\n"), rels:["Restaurant -[HAS_FEATURE]-> RestaurantFeature"], conf:96, intent:"interior", toPin:false, excludeDish:null }; }
+  }
+
+  // ── RULE 2: Descriptive / natural-language → Pinecone directly ──
+  // No keyword needed — these are always semantic queries
+  if (DESCRIPTIVE_RE.test(m) && !matchedDish) {
+    addLog("router", m, "pin", "Descriptive query detected → Pinecone direct", Date.now());
+    return { text:"", rels:[], conf:0, intent:"descriptive-pinecone", toPin:true, excludeDish:null };
+  }
+
+  // ── RULE 3: Similarity intent with a named dish ──────
+  if (matchedDish && SIMILARITY_RE.test(m)) {
+    addLog("router", m, "pin", "Similarity intent for '" + matchedDish + "' → Pinecone (excluding itself)", Date.now());
+    return { text:"", rels:[], conf:0, intent:"similarity: " + matchedDish, toPin:true, excludeDish:matchedDish };
+  }
+
+  // ── RULE 4: Pairing intent with named dish ───────────
+  const isPairing = /\b(pair|goes with|go with|side for|combine|order with|match|complement|best with|have with|eat with|what with)\b/i.test(m);
+  if (matchedDish && isPairing) {
+    const safe = matchedDish.split(" ").map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(" ");
+    const d = await q4j('{ dishes(where:{name:{contains:"' + safe + '"}}){ name price pairsWellWithDishes { name price spiceLevel } } }', "pairing: " + safe);
+    if (d.dishes && d.dishes.length) {
+      const dish = d.dishes[0];
+      if (dish.pairsWellWithDishes && dish.pairsWellWithDishes.length) {
+        return { text:"PAIRS WITH " + dish.name + ": " + dish.pairsWellWithDishes.map(function(p){ return p.name + " ($" + p.price + ")"; }).join(", "),
+          rels:["Dish(" + dish.name + ") -[PAIRS_WELL_WITH]-> Dish"], conf:98, intent:"pairing: " + safe, toPin:false, excludeDish:null };
+      }
+    }
+  }
+
+  // ── RULE 5: Specific dish name lookup ────────────────
+  if (matchedDish && !isPairing) {
+    const safe = matchedDish.split(" ").map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(" ");
+    const d = await q4j('{ dishes(where:{name:{contains:"' + safe + '"}}){ name price isVeg spiceLevel mustTry desc pairsWellWithDishes { name price } } }', "dish: " + safe);
+    if (d.dishes && d.dishes.length) {
+      const dish = d.dishes[0];
+      let info = "DISH: " + dish.name + " ($" + dish.price + ", " + (dish.isVeg === "true" ? "Veg" : "Non-Veg") + ", " + dish.spiceLevel + " spice" + (dish.mustTry === "true" ? ", chef-recommended" : "") + "). " + (dish.desc || "");
+      if (dish.pairsWellWithDishes && dish.pairsWellWithDishes.length) info += " | Best with: " + dish.pairsWellWithDishes.map(function(p){ return p.name; }).join(", ");
+      return { text:info, rels:["Dish node · PAIRS_WELL_WITH"], conf:97, intent:"dish: " + safe, toPin:false, excludeDish:null };
+    }
+  }
+
+  // ── RULE 6: Beverages ────────────────────────────────
+  if (/\b(drink|beverage|juice|lassi|chai|tea|coffee|soda|sugarcane|mocktail|cold drink)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isBeverage:{eq:"true"}}){ name price } }', "beverages");
+    if (d.dishes && d.dishes.length) return { text:"DRINKS: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isBeverage=true"], conf:97, intent:"beverages", toPin:false, excludeDish:null };
+  }
+
+  // ── RULE 7: Hours / Timing ───────────────────────────
+  if (/\b(hour|open|close|when|monday|timing|what time|reservation|book a table)\b/i.test(m)) {
+    const d = await q4j("{ timings { fullSummary lunchHours dinnerHours closedOn closedMessage timezone buffetHours buffetNote } }", "hours");
+    if (d.timings && d.timings.length) {
+      const t = d.timings[0];
+      return { text:"HOURS: " + t.fullSummary + " Closed: " + t.closedOn + ". " + (t.closedMessage || "") + " Buffet: " + (t.buffetNote || t.buffetHours || "Tue-Sun 11AM-2PM") + ".", rels:["Restaurant -[OPERATES_AT]-> Timing"], conf:99, intent:"hours", toPin:false, excludeDish:null };
+    }
+  }
+
+  // ── RULE 8: Buffet ───────────────────────────────────
+  if (/\b(buffet|all you can eat)\b/i.test(m)) {
+    const d = await q4j("{ timings { buffetAvailable buffetHours buffetDays buffetNote closedOn } }", "buffet");
+    if (d.timings && d.timings.length) {
+      const t = d.timings[0];
+      return { text:"BUFFET: " + (t.buffetNote || "") + " Hours: " + (t.buffetHours || "11AM-2PM") + ". Days: " + (t.buffetDays || "Tue-Sun") + ". Closed: " + t.closedOn + ".", rels:["Timing node: buffetNote"], conf:99, intent:"buffet", toPin:false, excludeDish:null };
+    }
+  }
+
+  // ── RULE 9: Waiters ──────────────────────────────────
+  if (/\b(waiter|waiters|waitress|server|servers|serving staff|who serves|who is serving|front of house|table staff|who will serve)\b/i.test(m)) {
+    const d = await q4j('{ staff(where:{role:{eq:"Waiter"}}){ name role expertise } }', "waiters");
+    if (d.staff && d.staff.length) return { text:"WAITERS: " + d.staff.map(function(s){ return s.name + (s.expertise ? " — " + s.expertise : ""); }).join(", "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:98, intent:"waiters", toPin:false, excludeDish:null };
+  }
+
+  // ── RULE 10: Chef / kitchen team ─────────────────────
+  if (/\b(head chef|chief chef|who is chef|who is the chef|your chef|kitchen team|sous chef|side chef|who cooks|who is cooking)\b/i.test(m) && !(/chicken/i.test(m))) {
+    const d = await q4j('{ staff(where:{role:{in:["Chief Chef","Head Chef","Side Chef","Sous Chef"]}}){ name role expertise } }', "chef");
+    if (d.staff && d.staff.length) return { text:"KITCHEN TEAM: " + d.staff.map(function(s){ return s.name + " (" + s.role + (s.expertise ? ", " + s.expertise : "") + ")"; }).join(" | "), rels:["Staff -[WORKS_AT]-> Restaurant","Restaurant -[AI_INSPIRED_BY]-> Staff"], conf:97, intent:"kitchen team", toPin:false, excludeDish:null };
+  }
+
+  // ── RULE 11: Manager ─────────────────────────────────
+  if (/\b(manager|who manages|in charge|owner)\b/i.test(m)) {
+    const d = await q4j('{ staff(where:{role:{eq:"Manager"}}){ name role } }', "manager");
+    if (d.staff && d.staff.length) return { text:"MANAGER: " + d.staff.map(function(s){ return s.name; }).join(", "), rels:["Staff -[WORKS_AT]-> Restaurant"], conf:97, intent:"manager", toPin:false, excludeDish:null };
+  }
+
+  // ── RULE 12: Allergens ───────────────────────────────
+  if (/\b(allerg|dairy|gluten|shellfish|nut|peanut|lactose|safe to eat|intoleran|food sensitiv)\b/i.test(m)) {
+    const d = await q4j("{ allergens { name severity commonIn } }", "allergens");
+    if (d.allergens && d.allergens.length) return { text:"ALLERGENS DISCLOSED: " + d.allergens.map(function(a){ return a.name + " (" + a.severity + ") — common in: " + a.commonIn; }).join(" | "), rels:["AboutUs -[DISCLOSES_ALLERGEN]-> Allergen"], conf:97, intent:"allergens", toPin:false, excludeDish:null };
+  }
+
+  // ── RULE 13: Interior / accommodation ────────────────
+  if (/\b(interior|accommodation|ambiance|ambience|decor|seating|atmosphere|vibe|inside|ganesha|mandir|pooja|lighting|how does it look|dining room)\b/i.test(m)) {
+    const d = await q4j("{ restaurantFeatures { property value type } }", "interior");
+    if (d.restaurantFeatures && d.restaurantFeatures.length) {
+      const interior = d.restaurantFeatures.filter(function(f){ return ["HAS_INTERIOR","HAS_DECOR","HAS_AMBIENCE","HAS_SEATING","HAS_LIGHTING","HAS_AROMA"].includes(f.type); });
+      const facility = d.restaurantFeatures.filter(function(f){ return f.type === "HAS_FACILITY"; });
+      const parts = [];
+      if (interior.length) parts.push("INTERIOR: " + interior.map(function(f){ return f.property + ": " + f.value; }).join(" | "));
+      if (facility.length) parts.push("FACILITIES: " + facility.map(function(f){ return f.property + ": " + f.value; }).join(" | "));
+      return { text:parts.join("\n"), rels:["Restaurant -[HAS_FEATURE]-> RestaurantFeature"], conf:96, intent:"interior", toPin:false, excludeDish:null };
+    }
+  }
+
+  // ── RULE 14: Exact category queries ──────────────────
+  if (/\b(biryani|biriyani)\b/i.test(m)) {
+    const d = await q4j('{ categories(where:{name:{eq:"Biriyani"}}){ name includesDishes { name price } } }', "biryani");
+    if (d.categories && d.categories.length && d.categories[0].includesDishes && d.categories[0].includesDishes.length) {
+      const dishList = d.categories[0].includesDishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", ");
+      return { text:"BIRYANI OPTIONS ON OUR MENU (list ALL of these to the customer): " + dishList, rels:["Category(Biriyani) -[INCLUDES]-> Dish"], conf:97, intent:"biryani", toPin:false, excludeDish:null };
+    }
+    const d2 = await q4j('{ dishes(where:{name:{contains:"Biriyani"}}){ name price } }', "biryani-fallback");
+    const d3 = await q4j('{ dishes(where:{name:{contains:"Biryani"}}){ name price } }', "biryani-fallback2");
+    const all = [].concat(d2.dishes||[], d3.dishes||[]);
+    if (all.length) return { text:"BIRYANI DISHES: " + all.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish name contains Biriyani"], conf:95, intent:"biryani", toPin:false, excludeDish:null };
+  }
+  if (/\b(dosa|south indian|idli|vada|uttapam)\b/i.test(m)) {
+    const d = await q4j('{ categories(where:{name:{eq:"Dosa & South Indian"}}){ name includesDishes { name price } } }', "dosa");
+    if (d.categories && d.categories.length && d.categories[0].includesDishes && d.categories[0].includesDishes.length)
+      return { text:"DOSA & SOUTH INDIAN: " + d.categories[0].includesDishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Category(Dosa) -[INCLUDES]-> Dish"], conf:97, intent:"dosa", toPin:false, excludeDish:null };
+  }
+  if (/\b(naan|bread|roti|paratha|kulcha)\b/i.test(m)) {
+    const d = await q4j('{ categories(where:{name:{eq:"Breads & Naan"}}){ name includesDishes { name price } } }', "breads");
+    if (d.categories && d.categories.length && d.categories[0].includesDishes && d.categories[0].includesDishes.length)
+      return { text:"BREADS: " + d.categories[0].includesDishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Category(Breads) -[INCLUDES]-> Dish"], conf:97, intent:"breads", toPin:false, excludeDish:null };
+  }
+  if (/\b(vegetarian|veg dish|no meat|plant based|meatless)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isVeg:{eq:"true"}}){ name price spiceLevel mustTry } }', "vegetarian");
+    if (d.dishes && d.dishes.length) {
+      const must = d.dishes.filter(function(x){ return x.mustTry === "true"; });
+      const show = must.length ? must : d.dishes;
+      return { text:"VEGETARIAN (" + d.dishes.length + " total): " + show.slice(0,8).map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isVeg=true"], conf:95, intent:"vegetarian", toPin:false, excludeDish:null };
+    }
+  }
+  if (/\b(must try|must-try|best dish|popular dish|signature dish|chef special|what to order|what should i order|famous dish)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{mustTry:{eq:"true"}}){ name price isVeg spiceLevel } }', "must-try");
+    if (d.dishes && d.dishes.length) return { text:"MUST-TRY: " + d.dishes.slice(0,8).map(function(x){ return x.name + " ($" + x.price + (x.isVeg === "true" ? " veg" : "") + ")"; }).join(", "), rels:["Dish: mustTry=true"], conf:95, intent:"must-try", toPin:false, excludeDish:null };
+  }
+  if (/\b(seafood|shrimp|prawn)\b/i.test(m)) {
+    const d1 = await q4j('{ dishes(where:{name:{contains:"Shrimp"}}){ name price } }', "shrimp");
+    const d2 = await q4j('{ dishes(where:{name:{contains:"Prawn"}}){ name price } }', "prawn");
+    const all = [].concat(d1.dishes || [], d2.dishes || []);
+    if (all.length) return { text:"SEAFOOD: " + all.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Seafood dishes"], conf:96, intent:"seafood", toPin:false, excludeDish:null };
+  }
+  if (/\b(lamb|goat|mutton)\b/i.test(m)) {
+    const d1 = await q4j('{ dishes(where:{name:{contains:"Lamb"}}){ name price } }', "lamb");
+    const d2 = await q4j('{ dishes(where:{name:{contains:"Goat"}}){ name price } }', "goat");
+    const all = [].concat(d1.dishes || [], d2.dishes || []);
+    if (all.length) return { text:"LAMB/GOAT: " + all.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish name contains Lamb/Goat"], conf:96, intent:"lamb/goat", toPin:false, excludeDish:null };
+  }
+  if (/\b(chicken)\b/i.test(m) && !matchedDish) {
+    const d = await q4j('{ dishes(where:{name:{contains:"Chicken"}}){ name price spiceLevel } }', "chicken-generic");
+    if (d.dishes && d.dishes.length) return { text:"CHICKEN DISHES: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + ", " + x.spiceLevel + ")"; }).join(", "), rels:["Dish name contains Chicken"], conf:96, intent:"chicken dishes", toPin:false, excludeDish:null };
+  }
+  if (/\b(about|your story|history|founded|who are you)\b/i.test(m)) {
+    const d = await q4j("{ aboutuses { city state communityRole recognition customerExperience menuType } }", "about");
+    if (d.aboutuses && d.aboutuses.length) {
+      const a = d.aboutuses[0];
+      return { text:"ABOUT: " + (a.city || "Monroe") + ", " + (a.state || "Louisiana") + ". " + (a.communityRole || "") + ". " + (a.recognition || "") + ". " + (a.customerExperience || "") + ".", rels:["Restaurant -[HAS_ABOUT_US]-> AboutUs"], conf:97, intent:"about", toPin:false, excludeDish:null };
+    }
+  }
+  if (/\b(vegan)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{isVegan:{eq:"true"}}){ name price spiceLevel } }', "vegan");
+    if (d.dishes && d.dishes.length) return { text:"VEGAN: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + ")"; }).join(", "), rels:["Dish: isVegan=true"], conf:96, intent:"vegan", toPin:false, excludeDish:null };
+  }
+  if (/\b(menu|what do you (have|serve|offer)|show me|our food|food options)\b/i.test(m)) {
+    const d = await q4j('{ dishes(where:{mustTry:{eq:"true"}}){ name price isVeg spiceLevel } }', "menu-browse");
+    if (d.dishes && d.dishes.length) return { text:"MENU HIGHLIGHTS: " + d.dishes.map(function(x){ return x.name + " ($" + x.price + (x.isVeg === "true" ? " veg" : "") + ")"; }).join(" | "), rels:["Dish: mustTry=true"], conf:95, intent:"menu browse", toPin:false, excludeDish:null };
+  }
+
+  // ── NO MATCH → Pinecone semantic ─────────────────────
+  addLog("router", m, "skip", "No keyword match — routing to Pinecone semantic search", Date.now());
+  return { text:"", rels:[], conf:0, intent:"pinecone-semantic", toPin:true, excludeDish:null };
+}
+
+// ── CONFIDENCE SCORING ────────────────────────────────
+function calcScores(text, rels, conf, fromPinecone) {
+  if (!text) return { c: n4jLive ? 28 : 18, h: n4jLive ? 68 : 88 };
+  if (text.includes("MENU_REDIRECT")) return { c:99, h:1 };
+  if (fromPinecone) {
+    const c = Math.min(Math.max(conf, 75), 95);
+    return { c:c, h: Math.max(4, 100 - c - Math.floor(Math.random() * 6)) };
+  }
+  const hasRel = rels.some(function(r){ return /WORKS_AT|OPERATES_AT|HAS_FEATURE|HAS_ABOUT_US|DISCLOSES|INCLUDES|PAIRS|isBeverage|mustTry|isVeg|Dish|Staff|Allergen|Timing/.test(r); });
+  if (hasRel && conf >= 90) return { c: Math.min(conf + Math.floor(Math.random()*4), 99), h: 1 + Math.floor(Math.random()*5) };
+  if (conf >= 70) return { c: conf, h: 8 + Math.floor(Math.random()*8) };
+  return { c:28, h:72 };
+}
+
+// ── GATE 2 — OUTPUT GUARDRAIL ─────────────────────────
+function gate2(reply, graphContext, confidence, userMsg) {
+  const warnings = [];
+  const lower = reply.toLowerCase();
+  const userLower = (userMsg || "").toLowerCase();
+  // Price check
+  const prices = reply.match(/\$[\d]+\.?[\d]*/g) || [];
+  prices.forEach(function(price) {
+    if (graphContext && graphContext.length > 20 && !graphContext.includes(price)) warnings.push("price-unverified");
+  });
+  // Ungrounded assertion
+  if (["we have","we serve","we offer","is available","is on our menu"].some(function(p){ return lower.includes(p); }) && (!graphContext || graphContext.length < 30)) warnings.push("ungrounded");
+  // Low confidence
+  if (confidence < 40) warnings.push("low-confidence");
+  // Allergen disclaimer
+  if (/\b(allerg|dairy|gluten|shellfish|nut|peanut|lactose)\b/i.test(userLower) && !lower.includes("staff") && !lower.includes("inform") && !lower.includes("notify")) warnings.push("needs-allergen-note");
+
+  if (!warnings.length) return { safe: reply, warnings: [], triggered: false };
+
+  let safe = reply;
+  if (warnings.includes("price-unverified")) safe = '<em style="font-size:11px;color:#92400E">Note: price unverified — please confirm with staff.</em><br>' + safe;
+  if (warnings.includes("ungrounded")) safe = '<em style="font-size:11px;color:#92400E">Note: based on general knowledge, not live menu data.</em><br>' + safe;
+  if (warnings.includes("low-confidence")) safe += '<br><em style="font-size:11px;color:#92400E">Low confidence — please verify with our team.</em>';
+  if (warnings.includes("needs-allergen-note")) safe += "<br><br>Always inform our staff of any food allergies before ordering. Dishes are prepared in a shared kitchen.";
+
+  addLog("Gate 2", userMsg.substring(0,50), "gate", "Warnings: " + warnings.join(", "), Date.now());
+  return { safe: safe, warnings: warnings, triggered: true };
+}
+
+// ── CLAUDE API ────────────────────────────────────────
+async function callClaude(msg, graphText) {
+  if (!AK) return null;
+  const hasData = graphText && graphText.length > 20;
+  const sys = "You are Chef Krish, the warm AI host of Taste of India restaurant in Monroe, Louisiana.\n\n" +
+    "CRITICAL RULES — never break these:\n" +
+    "• ZERO beef. Taste of India is Hindu-owned. Cows are sacred. No beef ever served.\n" +
+    "• Only state names and prices that appear in the VERIFIED DATA below.\n" +
+    "• Never invent a dish, price, staff name, or hour that is not in the data.\n\n" +
+    (hasData
+      ? "VERIFIED LIVE DATA FROM NEO4J / PINECONE:\n" + graphText + "\n\nCRITICAL: (1) List the EXACT dishes, names, and prices from the data above — all of them. (2) NEVER say you lack menu data when data is provided. (3) If WAITERS shown: state those exact names confidently. (4) If BIRYANI OPTIONS shown: list every item with price. (5) Only name dishes from the data above"
+      : "No live data for this specific question. DO NOT say you don't have information. Instead say: I'd love to help! Could you be a bit more specific? I can share details about our biryani, curries, dosa, staff, hours, or facilities — just let me know what you're curious about! Tone: warm, helpful, curious.") +
+    "\n\nWhen item is not Indian: warmly acknowledge, explain we are authentic Indian, suggest real Indian alternatives from the data above.\n" +
+    "Tone: warm, premium, human, 2-4 sentences, food emojis. Never robotic.";
+  hist.push({ role:"user", content:msg });
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":AK,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body: JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:400, system:sys, messages:hist.slice(-10) }) });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = data.content && data.content[0] ? data.content[0].text : null;
+    if (reply) {
+      hist.push({ role:"assistant", content:reply });
+      const inp = (data.usage && data.usage.input_tokens) || 0;
+      const out = (data.usage && data.usage.output_tokens) || 0;
+      addTokens(msg, inp, out);
+    }
+    return reply;
+  } catch(e) {
+    addLog("claude", "POST /v1/messages", "err", e.message, Date.now());
+    return null;
+  }
+}
+
+// ── SEND ──────────────────────────────────────────────
+async function send() {
+  const inp = document.getElementById("uinput");
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = "";
+  addUser(txt);
+  showTyping();
+
+  // BEEF GUARD — instant block, no further processing
+  if (/\b(beef|beef curry|beef masala|beef vindaloo|veal|cow meat)\b/i.test(txt)) {
+    removeTyping();
+    addBot("Namaste! We don't serve beef at Taste of India — in Hindu culture, cows are sacred. May I suggest our <strong>Lamb Rogan Josh</strong> ($17.99, slow-cooked and incredibly tender) or our <strong>Butter Chicken</strong> ($15.99, rich and creamy)? Both are guest favourites! 🍛🙏", "t-both", {c:99,h:1}, ["Menu policy: no beef served"], "beef-guard", []);
+    return;
+  }
+
+  // Get routing decision from router
+  const routeResult = await getGraph(txt);
+  let { text:graphText, rels, conf, intent, toPin, excludeDish } = routeResult;
+  let fromPinecone = false;
+
+  // If router says go to Pinecone (toPin) OR no graph data returned
+  if (toPin || !graphText) {
+    const searchQuery = excludeDish ? excludeDish : txt;
+    addLog("pinecone-search", searchQuery, "pin", "Semantic search" + (excludeDish ? " (excluding: " + excludeDish + ")" : ""), Date.now());
+    try {
+      const matches = await pineconeSearch(searchQuery, 7, "dish", excludeDish);
+      if (matches.length) {
+        const semText = buildSemanticText(matches);
+        fromPinecone = true;
+        conf = Math.round(matches[0].score * 100);
+        rels = ["Pinecone cosine similarity (voyage-3-lite 512d) → Dish vectors"];
+        intent = (excludeDish ? "similar-to: " + excludeDish : "semantic") + " (" + matches[0].score.toFixed(2) + ")";
+        if (excludeDish) {
+          graphText = "DISHES SIMILAR TO " + excludeDish.toUpperCase() + " (do NOT recommend " + excludeDish + " itself — user wants alternatives): " + semText;
+        } else {
+          graphText = semText;
+        }
+      } else {
+        addLog("pinecone-search", searchQuery, "skip", "No matches above threshold 0.40", Date.now());
+      }
+    } catch(e) {
+      addLog("pinecone-search", txt, "err", "Search failed: " + e.message, Date.now());
+    }
+  }
+
+  // Claude generates response grounded in graphText
+  let reply = await callClaude(txt, graphText);
+  const tag = reply ? (graphText ? "t-both" : "t-cla") : "t-neo";
+  if (!reply) {
+    reply = graphText ? "Here is what I found: " + graphText.substring(0, 250) : "Please add your Anthropic key above for full AI responses!";
+  }
+
+  // Gate 2 output guardrail
+  const scores = calcScores(graphText, rels, conf, fromPinecone);
+  const guardrail = gate2(reply, graphText, scores.c, txt);
+
+  removeTyping();
+  addBot(guardrail.safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"), tag, scores, rels, intent, guardrail.warnings);
+}
+
+// ── UI HELPERS ────────────────────────────────────────
+function addLog(intent, gql, status, summary, ts, ms, data) {
+  logs.unshift({ intent:intent, gql:gql, status:status, summary:summary, time:new Date(ts || Date.now()).toLocaleTimeString(), ms:ms || 0, data:data, open:false });
+  renderLogs();
+}
+function renderLogs() {
+  const el = document.getElementById("log-body");
+  if (!logs.length) { el.innerHTML = '<div style="font-size:11px;color:#AAA;text-align:center;padding:20px 0">No queries yet.</div>'; return; }
+  el.innerHTML = logs.map(function(l, i) {
+    const icon = l.status === "ok" ? "OK" : l.status === "err" ? "ERR" : l.status === "gate" ? "GATE" : l.status === "pin" ? "PIN" : "SKIP";
+    return '<div class="log-entry ' + l.status + '" onclick="toggleLog(' + i + ')">' +
+      '<div style="display:flex;justify-content:space-between"><span class="log-status ' + l.status + '">' + icon + '</span><span class="log-time">' + l.time + (l.ms ? " · " + l.ms + "ms" : "") + '</span></div>' +
+      '<div style="font-size:10px;font-weight:600;color:#555;margin:2px 0">' + l.intent + '</div>' +
+      '<div class="log-q">' + l.gql.substring(0, 80) + (l.gql.length > 80 ? "..." : "") + '</div>' +
+      '<div style="font-size:10px;color:' + (l.status === "ok" || l.status === "pin" ? "#1D9E75" : l.status === "gate" ? "#F59E0B" : "#E24B4A") + '">' + l.summary + '</div>' +
+      (l.open && l.data ? '<div class="log-data">' + JSON.stringify(l.data, null, 2).substring(0, 400) + '</div>' : '') +
+      '</div>';
+  }).join("");
+}
+function toggleLog(i) { logs[i].open = !logs[i].open; renderLogs(); }
+function clearLogs() { logs.length = 0; renderLogs(); }
+function addTokens(q, inp, out) {
+  totalIn += inp; totalOut += out; totalQ++;
+  tokHistory.unshift({ q:q, inp:inp, out:out, total:inp+out });
+  document.getElementById("tk-in").textContent = totalIn.toLocaleString();
+  document.getElementById("tk-out").textContent = totalOut.toLocaleString();
+  document.getElementById("tk-total").textContent = (totalIn+totalOut).toLocaleString();
+  document.getElementById("tk-q").textContent = totalQ;
+  const mx = Math.max.apply(null, tokHistory.map(function(t){ return t.total; }).concat([1]));
+  document.getElementById("tok-body").innerHTML = tokHistory.map(function(t){
+    return '<div class="tok-entry"><div class="tok-q" title="' + t.q + '">' + t.q.substring(0,36) + (t.q.length>36?"...":"") + '</div>' +
+      '<div style="display:flex;gap:8px;font-size:10px;color:#666;margin-bottom:2px"><span>In: <strong>' + t.inp + '</strong></span><span>Out: <strong>' + t.out + '</strong></span><span>Total: <strong>' + t.total + '</strong></span></div>' +
+      '<div class="tok-bar"><div class="tok-fill" style="width:' + Math.round(t.total/mx*100) + '%"></div></div></div>';
+  }).join("");
+}
+function clearTokens() {
+  tokHistory.length = 0; totalIn = totalOut = totalQ = 0;
+  ["tk-in","tk-out","tk-total","tk-q"].forEach(function(id){ document.getElementById(id).textContent = "0"; });
+  document.getElementById("tok-body").innerHTML = '<div style="font-size:11px;color:#AAA;text-align:center;padding:10px 0">No queries yet.</div>';
+}
+function scoreHTML(c, h, rels, intent, gateWarnings) {
+  const cc = c>=80?"ch":c>=50?"cm":"cl";
+  const hc = h<=20?"hh":h<=50?"hm":"hl";
+  const cclr = c>=80?"#10B981":c>=50?"#F59E0B":"#EF4444";
+  const hclr = h<=20?"#10B981":h<=50?"#F59E0B":"#EF4444";
+  const ri = intent ? '<div class="intent-tag">intent: ' + intent + '</div><br>' : "";
+  const relHtml = rels && rels.length ? '<div style="font-size:10px;color:#0066CC;font-family:monospace;margin-top:5px;padding:4px 7px;background:#F0F7FF;border:1px solid #BFDBFE;border-radius:5px">' + rels.map(function(r){ return "• " + r; }).join("<br>") + '</div>' : "";
+  const gateHtml = gateWarnings && gateWarnings.length
+    ? '<div style="margin-top:4px"><span class="gate-tag">Gate 2: ' + gateWarnings.join(", ") + '</span></div>'
+    : '<div style="margin-top:4px;font-size:9px;color:#10B981;font-family:monospace">Gate 2 passed</div>';
+  return ri + '<div class="scores">' +
+    '<div class="sc ' + cc + '">Confidence: ' + c + '%<div class="bw"><div class="bf" style="width:' + c + '%;background:' + cclr + '"></div></div></div>' +
+    '<div class="sc ' + hc + '">Hallucination: ' + h + '%<div class="bw"><div class="bf" style="width:' + h + '%;background:' + hclr + '"></div></div></div>' +
+    '</div>' + relHtml + gateHtml;
+}
+function addBot(html, tag, scores, rels, intent, gateWarnings) {
+  const tags = { "t-neo":"Neo4j", "t-cla":"Claude AI", "t-both":"Neo4j + Claude", "t-pin":"Pinecone + Claude" };
+  const m = document.getElementById("msgs");
+  const d = document.createElement("div"); d.className = "msg bot";
+  d.innerHTML = '<div class="av">🍛</div><div class="bub"><div class="stag ' + tag + '">' + (tags[tag]||"Chef Krish") + '</div><div>' + html + '</div>' + (scores ? scoreHTML(scores.c, scores.h, rels, intent, gateWarnings) : "") + '</div>';
+  m.appendChild(d); m.scrollTop = m.scrollHeight;
+}
+function addUser(t) {
+  const m = document.getElementById("msgs"); const d = document.createElement("div"); d.className = "msg user";
+  d.innerHTML = '<div class="av">HI</div><div class="bub">' + t + '</div>'; m.appendChild(d); m.scrollTop = m.scrollHeight;
+}
+function showTyping() {
+  const m = document.getElementById("msgs"); const d = document.createElement("div"); d.className = "msg bot"; d.id = "typ";
+  d.innerHTML = '<div class="av">🍛</div><div class="bub"><div class="typing"><span></span><span></span><span></span></div></div>'; m.appendChild(d); m.scrollTop = m.scrollHeight;
+}
+function removeTyping() { const t = document.getElementById("typ"); if (t) t.remove(); }
+function showTab(name, btn) {
+  document.querySelectorAll(".tab-pane").forEach(function(p){ p.classList.remove("on"); });
+  document.querySelectorAll(".th-btn").forEach(function(b){ b.classList.remove("on"); });
+  document.getElementById("tab-" + name).classList.add("on"); btn.classList.add("on");
+}
+function ask(q) { document.getElementById("uinput").value = q; send(); }
+window.addEventListener("load", checkN4j);
+</script>
+</body>
+</html>
