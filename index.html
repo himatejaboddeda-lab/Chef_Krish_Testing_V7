@@ -1054,12 +1054,19 @@ function addBot(html, tag, scores, rels, intent, gateWarnings) {
     if (verified.length) {
       cartBtns = '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">' +
         verified.map(function(dish) {
-          var safeName = dish.name.replace(/'/g, "\'");
-          return '<button class="add-cart-btn" onclick="addToCart('' + safeName + '',' + dish.price + ')">🛒 Add ' + dish.name + ' ($' + dish.price.toFixed(2) + ')</button>';
+          var safeName = String(dish.name).replace(/"/g, "&quot;");
+          return '<button class="add-cart-btn" data-dish="' + safeName + '" data-price="' + dish.price + '">\uD83D\uDED2 Add ' + dish.name + ' ($' + dish.price.toFixed(2) + ')</button>';
         }).join("") + '</div>';
     }
   }
-  d.innerHTML = '<div class="av">🍛</div><div class="bub"><div class="stag ' + tag + '">' + (tags[tag]||"Chef Krish") + '</div><div>' + html + '</div>' + cartBtns + (scores ? scoreHTML(scores.c, scores.h, rels, intent, gateWarnings) : "") + '</div>';
+  d.innerHTML = '<div class="av">\uD83C\uDF5B</div><div class="bub"><div class="stag ' + tag + '">' + (tags[tag]||"Chef Krish") + '</div><div>' + html + '</div>' + cartBtns + (scores ? scoreHTML(scores.c, scores.h, rels, intent, gateWarnings) : "") + '</div>';
+  // Wire up cart buttons via event listeners (no inline onclick — avoids quote-escaping bugs)
+  var btns = d.querySelectorAll(".add-cart-btn");
+  for (var bi = 0; bi < btns.length; bi++) {
+    btns[bi].addEventListener("click", function() {
+      addToCart(this.getAttribute("data-dish"), parseFloat(this.getAttribute("data-price")));
+    });
+  }
   m.appendChild(d); m.scrollTop = m.scrollHeight;
 }
 function addUser(t) {
@@ -1131,20 +1138,27 @@ function renderCart() {
   var total = cart.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
   totalEl.textContent = "$" + total.toFixed(2);
   waBtn.disabled = false;
-  body.innerHTML = cart.map(function(item) {
-    var safeName = item.name.replace(/'/g, "\'");
+  body.innerHTML = cart.map(function(item, idx) {
+    var safeName = String(item.name).replace(/"/g, "&quot;");
     return '<div class="cart-item">' +
       '<div class="cart-item-info">' +
         '<div class="cart-item-name">' + item.name + '</div>' +
         '<div class="cart-item-price">$' + item.price.toFixed(2) + ' each</div>' +
       '</div>' +
       '<div class="cart-item-qty">' +
-        '<button class="qty-btn" onclick="changeQty('' + safeName + '',-1)">−</button>' +
+        '<button class="qty-btn" data-dish="' + safeName + '" data-delta="-1">\u2212</button>' +
         '<span class="qty-num">' + item.qty + '</span>' +
-        '<button class="qty-btn" onclick="changeQty('' + safeName + '',1)">+</button>' +
+        '<button class="qty-btn" data-dish="' + safeName + '" data-delta="1">+</button>' +
       '</div>' +
     '</div>';
   }).join("");
+  // Wire quantity buttons via listeners (no inline onclick — avoids quote bugs)
+  var qbtns = body.querySelectorAll(".qty-btn");
+  for (var qi = 0; qi < qbtns.length; qi++) {
+    qbtns[qi].addEventListener("click", function() {
+      changeQty(this.getAttribute("data-dish"), parseInt(this.getAttribute("data-delta"), 10));
+    });
+  }
 }
 
 function sendWhatsApp() {
@@ -1164,8 +1178,7 @@ function sendWhatsApp() {
   lines.push("🕐 *Ready in 30 minutes · Pickup · Pay at counter*");
   lines.push("");
   lines.push("Session: " + SESSION_ID);
-  var msg = encodeURIComponent(lines.join("
-"));
+  var msg = encodeURIComponent(lines.join("\n"));
   window.open("https://wa.me/" + WHATSAPP_NUMBER + "?text=" + msg, "_blank");
   // Log to Sheets
   if (SHEETS_URL && !SHEETS_URL.includes("YOUR_GOOGLE")) {
@@ -1196,9 +1209,20 @@ function handleSignIn() {
     }
     return;
   }
+  // Guard 1 — Client ID not configured yet
+  var CLIENT_ID = "10005816617-30ggqjn2c7hktchpi0otja3qgfl6lutc.apps.googleusercontent.com";
+  if (CLIENT_ID.indexOf("YOUR_GOOGLE_CLIENT_ID") !== -1) {
+    alert("Google Sign-In is not set up yet. Add your OAuth Client ID in the code first.");
+    return;
+  }
+  // Guard 2 — Google library not loaded yet (slow network or blocked)
+  if (typeof google === "undefined" || !google.accounts || !google.accounts.oauth2) {
+    alert("Google Sign-In is still loading. Please wait a moment and try again.");
+    return;
+  }
   // Use Google One Tap / token popup
   google.accounts.oauth2.initTokenClient({
-    client_id: "10005816617-30ggqjn2c7hktchpi0otja3qgfl6lutc.apps.googleusercontent.com",
+    client_id: CLIENT_ID,
     scope: "profile email",
     callback: function(tokenResponse) {
       if (tokenResponse && tokenResponse.access_token) {
