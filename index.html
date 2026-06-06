@@ -217,6 +217,57 @@ let AK = "", hist = [], n4jLive = false, pineconeReady = false;
 let totalIn = 0, totalOut = 0, totalQ = 0;
 const logs = [], tokHistory = [], embedCache = {};
 
+// ── CACHE LAYER ───────────────────────────────────────
+const CACHE_PREFIX = "ck_v7_";
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+// Queries that must NEVER be cached (safety-critical or time-sensitive)
+const CACHE_NEVER_RE = /\b(allerg|nut|peanut|dairy|gluten|shellfish|lactose|vegan|available tonight|today.?s special|open now|hours today)\b/i;
+
+function getCached(query) {
+  if (CACHE_NEVER_RE.test(query)) return null; // never serve cached allergen/availability answers
+  try {
+    const key = CACHE_PREFIX + query.trim().toLowerCase();
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (Date.now() - obj.ts > CACHE_TTL_MS) { sessionStorage.removeItem(key); return null; }
+    return obj;
+  } catch(e) { return null; }
+}
+
+function setCache(query, reply, tag, scores, rels, intent, gateWarnings) {
+  if (CACHE_NEVER_RE.test(query)) return; // never cache allergen/availability
+  try {
+    const key = CACHE_PREFIX + query.trim().toLowerCase();
+    sessionStorage.setItem(key, JSON.stringify({ reply:reply, tag:tag, scores:scores, rels:rels, intent:intent, gateWarnings:gateWarnings, ts:Date.now() }));
+  } catch(e) {} // storage full — silently skip
+}
+
+// ── GOOGLE SHEETS ORDER LOGGER ────────────────────────
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwDe53MBGKcPOJa0IDxN78gFy9Z-7ClxGAMZd2iImQWrRdu1AGD3_xk7SlEwnZPPZZlpw/exec";
+const SESSION_ID = "sess_" + Math.random().toString(36).slice(2, 9);
+const ORDER_RE = /\b(order|want|i.?ll (have|get|take)|give me|can i (get|have)|i.?d like|i want|add to|get me)\b/i;
+
+async function logOrder(customerMessage, dishName, price) {
+  if (!SHEETS_URL || SHEETS_URL.includes("YOUR_GOOGLE")) return; // skip until URL is set
+  try {
+    await fetch(SHEETS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: SESSION_ID,
+        customerMessage: customerMessage,
+        dishDetected: dishName || "unknown",
+        price: price || "",
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch(e) {
+    // never block the user experience for a logging failure — silent fail
+    addLog("sheets", customerMessage, "err", "Order log failed: " + e.message, Date.now());
+  }
+}
+
 // ── NON-INDIAN FOOD PATTERN (checked first in send) ──
 // These must NEVER go to must-try or any Neo4j route
 const NON_INDIAN_RE = /\b(pizza|burger|sushi|taco|pasta|sandwich|hot dog|french fry|steak|bbq|fried chicken|kebab|shawarma|gyro|burrito|quesadilla|noodle|ramen|pho|chinese food|mexican|thai|japanese|italian|alligator|crocodile|lobster roll|fish and chips|fish and chip|clam chowder|crab cake|oyster|crawfish|catfish|gumbo|jambalaya|po.?boy|beignet|waffle|pancake|bacon|ham|pork chop|ribs|brisket|pulled pork|hotdog|wings|nugget|submarine|sub sandwich|wrap|quesadilla|nachos|salsa|guacamole|enchilada|fajita|tamale)\b/i;
@@ -808,6 +859,15 @@ async function send() {
   if (!txt) return;
   inp.value = "";
   addUser(txt);
+
+  // ── CACHE CHECK — return instantly if we have a fresh answer ──
+  const cached = getCached(txt);
+  if (cached) {
+    addLog("cache-hit", txt, "ok", "Served from cache (no API call)", Date.now());
+    addBot(cached.reply, cached.tag, cached.scores, cached.rels, cached.intent, cached.gateWarnings);
+    return;
+  }
+
   showTyping();
 
   // BEEF GUARD — instant block, no further processing
@@ -858,8 +918,22 @@ async function send() {
   const scores = calcScores(graphText, rels, conf, fromPinecone);
   const guardrail = gate2(reply, graphText, scores.c, txt);
 
+  // ── CACHE SAVE — store answer for repeated questions ──
+  const finalReply = guardrail.safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  setCache(txt, finalReply, tag, scores, rels, intent, guardrail.warnings);
+
+  // ── ORDER LOGGER — detect order intent and log to Sheets ──
+  if (ORDER_RE.test(txt)) {
+    // Try to find a dish name in the graph context or matched dish
+    const dishMatch = graphText && graphText.match(/(?:DISH:|MENU HIGHLIGHTS:|VERIFIED DISH MATCHES)[^:]*?([A-Z][A-Za-z ]+?)(?:\s*\(|\$|,)/);
+    const dishName = dishMatch ? dishMatch[1].trim() : null;
+    const priceMatch = graphText && graphText.match(/\$(\d+\.?\d*)/);
+    const price = priceMatch ? "$" + priceMatch[1] : null;
+    if (dishName) logOrder(txt, dishName, price);
+  }
+
   removeTyping();
-  addBot(guardrail.safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>"), tag, scores, rels, intent, guardrail.warnings);
+  addBot(finalReply, tag, scores, rels, intent, guardrail.warnings);
 }
 
 // ── UI HELPERS ────────────────────────────────────────
